@@ -4,9 +4,11 @@ NUM_OF_CARS = 2
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
+
 class CarLanes:
     LEFT = "left"
     RIGHT = "right"
+
 
 class Game2Cars(arcade.Window):
     def __init__(self, width, height, num_of_cars):
