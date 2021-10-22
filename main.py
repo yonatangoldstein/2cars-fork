@@ -22,7 +22,6 @@ class MyGame(arcade.Window):
         for i in range(NUM_OF_ROADS):
             road_center_x = (i + 1) * (SCREEN_WIDTH / (NUM_OF_ROADS + 1))
             self.draw_road(road_center_x)
-        # self.draw_road(ROAD_WIDTH * 3)
 
     @staticmethod
     def draw_road(center_x):
