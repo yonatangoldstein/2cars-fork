@@ -19,12 +19,15 @@ class MyGame(arcade.Window):
     def on_draw(self):
         """ Render the screen. """
         arcade.start_render()
+        self._draw_roads()
+
+    def _draw_roads(self):
         for i in range(NUM_OF_ROADS):
             road_center_x = (i + 1) * (SCREEN_WIDTH / (NUM_OF_ROADS + 1))
-            self.draw_road(road_center_x)
+            self._draw_road(road_center_x)
 
     @staticmethod
-    def draw_road(center_x):
+    def _draw_road(center_x):
         arcade.draw_rectangle_filled(center_x, SCREEN_HEIGHT / 2, ROAD_WIDTH, SCREEN_HEIGHT,
                                      arcade.color.BLACK_LEATHER_JACKET)
         arcade.draw_rectangle_filled(center_x, SCREEN_HEIGHT / 2, LANE_LINE_WIDTH, SCREEN_HEIGHT,
