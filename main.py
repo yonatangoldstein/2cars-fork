@@ -14,6 +14,7 @@ class Game2Cars(arcade.Window):
         self._cars = [get_car(i) for i in range(num_of_cars)]
         self._road_width = width / num_of_cars / 2
         self._lane_line_width = self._road_width / 20
+        self._is_started = False
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
@@ -22,10 +23,16 @@ class Game2Cars(arcade.Window):
     def on_draw(self):
         """ Render the screen. """
         arcade.start_render()
+        if not self._is_started:
+            self._draw_intro()
+            return
         for i in range(self._num_of_cars):
             road_center_x = (i + 1) * (self.width / (self._num_of_cars + 1))
             self._draw_road(road_center_x)
             self._draw_car(road_center_x, self._cars[i])
+
+    def _draw_intro(self):
+        arcade.draw_text("Press space to start", self.width * 0.2, self.height / 2, arcade.color.WHITE_SMOKE, 24)
 
     def _draw_road(self, center_x):
         arcade.draw_rectangle_filled(center_x, self.height / 2, self._road_width, self.height,
@@ -47,6 +54,11 @@ class Game2Cars(arcade.Window):
         for car in self._cars:
             if symbol in car.keymap:
                 car.lane = car.keymap[symbol]
+        if symbol == arcade.key.SPACE and not self._is_started:
+            self._start_game()
+
+    def _start_game(self):
+        self._is_started = True
 
 
 def main():
