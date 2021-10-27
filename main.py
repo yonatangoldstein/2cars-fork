@@ -10,8 +10,11 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 750
 SPAWN_RATE = 1
 MAX_DISTANCE = 100
+DISTANCE_TO_CAR = 84
+DISTANCE_PAST_CAR = 97
 OBSTACLE_INITIAL_DISTANCE = 5
 OBSTACLE_SPEED = 0.5
+FAILURE_MESSAGE_DISPLAY_TIME = 0.4
 
 
 class Game2Cars(arcade.Window):
@@ -26,6 +29,8 @@ class Game2Cars(arcade.Window):
         self._last_spawn_times = [0.0 for _ in range(num_of_cars)]
         self._obstacles = [[] for _ in range(num_of_cars)]
         self._spawn_rate = spawn_rate
+        self._misses = []
+        self._crashes = []
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
@@ -43,6 +48,16 @@ class Game2Cars(arcade.Window):
             self._draw_road(road_center_x)
             self._draw_car(road_center_x, self._cars[i])
             self._draw_obstacles(road_center_x, self._obstacles[i])
+
+        self._draw_failure_messages()
+
+    def _draw_failure_messages(self):
+        last_crash_time = self._crashes[-1] if self._crashes else 0
+        if time.time() - last_crash_time < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("Crashed!", self.width / 3, self.height / 2, arcade.color.RED, 32, bold=True)
+        last_miss_time = self._misses[-1] if self._misses else 0
+        if time.time() - last_miss_time < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
 
     def _draw_intro(self):
         arcade.draw_text("Press space to start", self.width * 0.2, self.height / 2, arcade.color.WHITE_SMOKE, 24)
@@ -62,20 +77,39 @@ class Game2Cars(arcade.Window):
     def _draw_obstacles(self, road_center_x, obstacles):
         for obstacle in obstacles:
             center_x = road_center_x + ((self._road_width / 4) * (1 if obstacle.lane == CarLanes.RIGHT else -1))
-            center_y = SCREEN_HEIGHT * ((MAX_DISTANCE - obstacle.distance) / MAX_DISTANCE)
+            center_y = self.height * ((MAX_DISTANCE - obstacle.distance) / MAX_DISTANCE)
             arcade.draw_circle_filled(center_x, center_y, self._road_width / 7, obstacle.color)
 
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
+        if not self._is_started:
+            return
         self._move_obstacles()
+        self._obstacle_car_interactions()
         self._remove_finished_obstacles()
         self._spawn_new_obstacles()
+
+    def _obstacle_car_interactions(self):
+        for i in range(self._num_of_cars):
+            for obstacle in self._obstacles[i]:
+                if DISTANCE_TO_CAR <= obstacle.distance < DISTANCE_PAST_CAR and obstacle.lane == self._cars[i].lane:
+                    if isinstance(obstacle, Bomb):
+                        self._handle_crash()
+                    self._obstacles[i].remove(obstacle)
 
     def _remove_finished_obstacles(self):
         for i in range(self._num_of_cars):
             for obstacle in self._obstacles[i]:
                 if obstacle.distance >= MAX_DISTANCE:
+                    if isinstance(obstacle, Star):
+                        self._handle_miss()
                     self._obstacles[i].remove(obstacle)
+
+    def _handle_crash(self):
+        self._crashes.append(time.time())
+
+    def _handle_miss(self):
+        self._misses.append(time.time())
 
     def _move_obstacles(self):
         for i in range(self._num_of_cars):
