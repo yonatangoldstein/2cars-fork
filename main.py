@@ -1,3 +1,5 @@
+import datetime
+import json
 import random
 import time
 import arcade
@@ -135,11 +137,18 @@ class Game2Cars(arcade.Window):
         self._is_started = True
         self._start_time = time.time()
 
+    def export_game_data(self):
+        return json.dumps({"start_time": self._start_time,
+                           "crashes": self._crashes,
+                           "misses": self._misses})
+
 
 def main():
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, NUM_OF_CARS, SPAWN_RATE)
     game.setup()
     arcade.run()
+    data_filename = "2cars_data_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".json"
+    open(data_filename, "w").write(game.export_game_data())
 
 
 if __name__ == "__main__":
