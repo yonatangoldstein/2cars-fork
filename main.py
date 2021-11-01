@@ -204,6 +204,7 @@ class Game2Cars(arcade.Window):
                            "misses": self._misses,
                            "question_appears": self._question_appear_times,
                            "question_mistakes": self._question_mistakes,
+                           "question_timeouts": self._question_timeouts,
                            "question_successes": self._question_successes})
 
 
