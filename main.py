@@ -68,9 +68,9 @@ class Game2Cars(arcade.Window):
     def _draw_question(self):
         if self._current_question is None:
             return
-        arcade.draw_rectangle_filled(self.width / 2, self.height * 3 / 4, self.width / 4, self.height / 10,
+        arcade.draw_rectangle_filled(self.width / 2, self.height / 3, self.width / 4, self.height / 10,
                                      arcade.color.GRAY)
-        arcade.draw_text(str(self._current_question), self.width / 2.6, self.height * 3 / 4, font_size=26, bold=True)
+        arcade.draw_text(str(self._current_question), self.width / 2.6, self.height / 3, font_size=26, bold=True)
 
     def _draw_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
@@ -81,13 +81,13 @@ class Game2Cars(arcade.Window):
             arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
         last_question_timeout = self._question_timeouts[-1] if self._question_timeouts else 0
         if time.time() - last_question_timeout < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Too late!", self.width / 2.5, self.height * 3/ 4, arcade.color.RED, 32, bold=True)
+            arcade.draw_text("Too late!", self.width / 2.5, self.height / 3, arcade.color.RED, 32, bold=True)
         last_question_mistake = self._question_mistakes[-1] if self._question_mistakes else 0
         if time.time() - last_question_mistake < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Wrong!", self.width / 2.5, self.height * 3 / 4, arcade.color.RED, 32, bold=True)
+            arcade.draw_text("Wrong!", self.width / 2.5, self.height / 3, arcade.color.RED, 32, bold=True)
         last_question_success = self._question_successes[-1] if self._question_successes else 0
         if time.time() - last_question_success < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Nice!", self.width / 2.5, self.height * 3 / 4, arcade.color.GREEN, 32, bold=True)
+            arcade.draw_text("Nice!", self.width / 2.5, self.height / 3, arcade.color.GREEN, 32, bold=True)
 
     def _draw_intro(self):
         arcade.draw_text("Press space to start", self.width * 0.2, self.height / 2, arcade.color.WHITE_SMOKE, 24)
@@ -179,9 +179,9 @@ class Game2Cars(arcade.Window):
             self._start_game()
         if self._current_question is not None:
             answer = None
-            if symbol == arcade.key.T:
+            if symbol == arcade.key.V:
                 answer = True
-            elif symbol == arcade.key.V:
+            elif symbol == arcade.key.F:
                 answer = False
             if answer is not None:
                 self._handle_user_question_response(answer)

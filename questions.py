@@ -14,7 +14,7 @@ class TrueFalseMathQuestion(object):
         self._arg2 = arg2
         self._op = op
         self._real_result = op(arg1, arg2)
-        self._result = self._real_result + random.randint(0, 2)
+        self._result = self._real_result + random.choice([0, random.randint(1, 2)])
 
     @property
     def answer(self):
