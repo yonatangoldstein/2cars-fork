@@ -1,8 +1,10 @@
+import os
 import datetime
 import json
 import random
 import time
 import arcade
+import pathlib
 from car import CarLanes
 from car_config import get_car
 from obstacles import Bomb, Star
@@ -147,8 +149,9 @@ def main():
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, NUM_OF_CARS, SPAWN_RATE)
     game.setup()
     arcade.run()
+    pathlib.Path("data").mkdir(exist_ok=True)
     data_filename = "2cars_data_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".json"
-    open(data_filename, "w").write(game.export_game_data())
+    open(str(pathlib.Path("data", data_filename)), "w").write(game.export_game_data())
 
 
 if __name__ == "__main__":
