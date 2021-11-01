@@ -7,6 +7,7 @@ import pathlib
 from car import CarLanes
 from car_config import get_car
 from obstacles import Bomb, Star
+from questions import TrueFalseMathQuestion
 
 NUM_OF_CARS = 2
 SCREEN_WIDTH = 800
@@ -18,6 +19,8 @@ DISTANCE_PAST_CAR = 97
 OBSTACLE_INITIAL_DISTANCE = 5
 OBSTACLE_SPEED = 0.5
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
+QUESTION_FREQ = 7
+QUESTION_DURATION = 4
 
 
 class Game2Cars(arcade.Window):
@@ -34,6 +37,13 @@ class Game2Cars(arcade.Window):
         self._spawn_rate = spawn_rate
         self._misses = []
         self._crashes = []
+        self._current_question = None
+        self._last_question_appear_time = 0
+        self._last_question_finish_time = time.time()
+        self._question_appear_times = []
+        self._question_timeouts = []
+        self._question_mistakes = []
+        self._question_successes = []
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
@@ -52,7 +62,15 @@ class Game2Cars(arcade.Window):
             self._draw_car(road_center_x, self._cars[i])
             self._draw_obstacles(road_center_x, self._obstacles[i])
 
+        self._draw_question()
         self._draw_failure_messages()
+
+    def _draw_question(self):
+        if self._current_question is None:
+            return
+        arcade.draw_rectangle_filled(self.width / 2, self.height * 3 / 4, self.width / 4, self.height / 10,
+                                     arcade.color.GRAY)
+        arcade.draw_text(str(self._current_question), self.width / 2.6, self.height * 3 / 4, font_size=26, bold=True)
 
     def _draw_failure_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
@@ -61,6 +79,15 @@ class Game2Cars(arcade.Window):
         last_miss_time = self._misses[-1] if self._misses else 0
         if time.time() - last_miss_time < FAILURE_MESSAGE_DISPLAY_TIME:
             arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
+        last_question_timeout = self._question_timeouts[-1] if self._question_timeouts else 0
+        if time.time() - last_question_timeout < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("Too late!", self.width / 2.5, self.height * 3/ 4, arcade.color.RED, 32, bold=True)
+        last_question_mistake = self._question_mistakes[-1] if self._question_mistakes else 0
+        if time.time() - last_question_mistake < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("Wrong!", self.width / 2.5, self.height * 3 / 4, arcade.color.RED, 32, bold=True)
+        last_question_success = self._question_successes[-1] if self._question_successes else 0
+        if time.time() - last_question_success < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("Nice!", self.width / 2.5, self.height * 3 / 4, arcade.color.GREEN, 32, bold=True)
 
     def _draw_intro(self):
         arcade.draw_text("Press space to start", self.width * 0.2, self.height / 2, arcade.color.WHITE_SMOKE, 24)
@@ -91,6 +118,7 @@ class Game2Cars(arcade.Window):
         self._obstacle_car_interactions()
         self._remove_finished_obstacles()
         self._spawn_new_obstacles()
+        self._handle_question()
 
     def _obstacle_car_interactions(self):
         for i in range(self._num_of_cars):
@@ -127,12 +155,44 @@ class Game2Cars(arcade.Window):
                 self._obstacles[i].append(obstacle_type(lane, OBSTACLE_INITIAL_DISTANCE))
                 self._last_spawn_times[i] = time.time()
 
+    def _handle_question(self):
+        if self._current_question is not None and time.time() - self._last_question_appear_time > QUESTION_DURATION:
+            self._handle_question_timeout()
+        if self._current_question is None and time.time() - self._last_question_finish_time > QUESTION_FREQ:
+            self._add_question()
+
+    def _add_question(self):
+        self._current_question = TrueFalseMathQuestion.generate()
+        self._last_question_appear_time = time.time()
+        self._question_appear_times.append(time.time())
+
+    def _handle_question_timeout(self):
+        self._question_timeouts.append(time.time())
+        self._current_question = None
+        self._last_question_finish_time = time.time()
+
     def on_key_press(self, symbol: int, modifiers: int):
         for car in self._cars:
             if symbol in car.keymap:
                 car.lane = car.keymap[symbol]
         if symbol == arcade.key.SPACE and not self._is_started:
             self._start_game()
+        if self._current_question is not None:
+            answer = None
+            if symbol == arcade.key.T:
+                answer = True
+            elif symbol == arcade.key.V:
+                answer = False
+            if answer is not None:
+                self._handle_user_question_response(answer)
+
+    def _handle_user_question_response(self, answer):
+        if answer == self._current_question.answer:
+            self._question_successes.append(time.time())
+        else:
+            self._question_mistakes.append(time.time())
+        self._current_question = None
+        self._last_question_finish_time = time.time()
 
     def _start_game(self):
         self._is_started = True
