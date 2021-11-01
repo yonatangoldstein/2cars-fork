@@ -63,7 +63,7 @@ class Game2Cars(arcade.Window):
             self._draw_obstacles(road_center_x, self._obstacles[i])
 
         self._draw_question()
-        self._draw_failure_messages()
+        self._draw_messages()
 
     def _draw_question(self):
         if self._current_question is None:
@@ -72,7 +72,7 @@ class Game2Cars(arcade.Window):
                                      arcade.color.GRAY)
         arcade.draw_text(str(self._current_question), self.width / 2.6, self.height * 3 / 4, font_size=26, bold=True)
 
-    def _draw_failure_messages(self):
+    def _draw_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
         if time.time() - last_crash_time < FAILURE_MESSAGE_DISPLAY_TIME:
             arcade.draw_text("Crashed!", self.width / 3, self.height / 2, arcade.color.RED, 32, bold=True)
@@ -201,7 +201,10 @@ class Game2Cars(arcade.Window):
     def export_game_data(self):
         return json.dumps({"start_time": self._start_time,
                            "crashes": self._crashes,
-                           "misses": self._misses})
+                           "misses": self._misses,
+                           "question_appears": self._question_appear_times,
+                           "question_mistakes": self._question_mistakes,
+                           "question_successes": self._question_successes})
 
 
 def main():
