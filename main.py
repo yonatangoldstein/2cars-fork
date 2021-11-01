@@ -6,6 +6,7 @@ import arcade
 import pathlib
 from car import CarLanes
 from car_config import get_car
+from game_config import GameConfig
 from obstacles import Bomb, Star
 from questions import TrueFalseMathQuestion
 
@@ -24,17 +25,16 @@ QUESTION_DURATION = 4
 
 
 class Game2Cars(arcade.Window):
-    def __init__(self, width, height, num_of_cars, spawn_rate):
+    def __init__(self, width, height, game_config):
         super().__init__(width, height)
-        self._num_of_cars = num_of_cars
-        self._cars = [get_car(i) for i in range(num_of_cars)]
-        self._road_width = width / num_of_cars / 2
+        self._game_config = game_config
+        self._cars = [get_car(i) for i in range(game_config.num_of_cars)]
+        self._road_width = width / game_config.num_of_cars / 2
         self._lane_line_width = self._road_width / 20
         self._is_started = False
         self._start_time = None
-        self._last_spawn_times = [0.0 for _ in range(num_of_cars)]
-        self._obstacles = [[] for _ in range(num_of_cars)]
-        self._spawn_rate = spawn_rate
+        self._last_spawn_times = [0.0 for _ in range(game_config.num_of_cars)]
+        self._obstacles = [[] for _ in range(game_config.num_of_cars)]
         self._misses = []
         self._crashes = []
         self._current_question = None
@@ -56,8 +56,8 @@ class Game2Cars(arcade.Window):
             self._draw_intro()
             return
 
-        for i in range(self._num_of_cars):
-            road_center_x = (i + 1) * (self.width / (self._num_of_cars + 1))
+        for i in range(self._game_config.num_of_cars):
+            road_center_x = (i + 1) * (self.width / (self._game_config.num_of_cars + 1))
             self._draw_road(road_center_x)
             self._draw_car(road_center_x, self._cars[i])
             self._draw_obstacles(road_center_x, self._obstacles[i])
@@ -121,7 +121,7 @@ class Game2Cars(arcade.Window):
         self._handle_question()
 
     def _obstacle_car_interactions(self):
-        for i in range(self._num_of_cars):
+        for i in range(self._game_config.num_of_cars):
             for obstacle in self._obstacles[i]:
                 if DISTANCE_TO_CAR <= obstacle.distance < DISTANCE_PAST_CAR and obstacle.lane == self._cars[i].lane:
                     if isinstance(obstacle, Bomb):
@@ -129,7 +129,7 @@ class Game2Cars(arcade.Window):
                     self._obstacles[i].remove(obstacle)
 
     def _remove_finished_obstacles(self):
-        for i in range(self._num_of_cars):
+        for i in range(self._game_config.num_of_cars):
             for obstacle in self._obstacles[i]:
                 if obstacle.distance >= MAX_DISTANCE:
                     if isinstance(obstacle, Star):
@@ -143,22 +143,22 @@ class Game2Cars(arcade.Window):
         self._misses.append(time.time())
 
     def _move_obstacles(self):
-        for i in range(self._num_of_cars):
+        for i in range(self._game_config.num_of_cars):
             for obstacle in self._obstacles[i]:
-                obstacle.distance += OBSTACLE_SPEED
+                obstacle.distance += self._game_config.obstacle_speed
 
     def _spawn_new_obstacles(self):
-        for i in range(self._num_of_cars):
-            if time.time() - self._last_spawn_times[i] > (self._spawn_rate + (random.random() / 5)):
+        for i in range(self._game_config.num_of_cars):
+            if time.time() - self._last_spawn_times[i] > (self._game_config.spawn_rate + (random.random() / 5)):
                 obstacle_type = Bomb if random.randint(0, 1) == 0 else Star
                 lane = CarLanes.LEFT if random.randint(0, 1) == 0 else CarLanes.RIGHT
                 self._obstacles[i].append(obstacle_type(lane, OBSTACLE_INITIAL_DISTANCE))
                 self._last_spawn_times[i] = time.time()
 
     def _handle_question(self):
-        if self._current_question is not None and time.time() - self._last_question_appear_time > QUESTION_DURATION:
+        if self._current_question is not None and time.time() - self._last_question_appear_time > self._game_config.question_duration:
             self._handle_question_timeout()
-        if self._current_question is None and time.time() - self._last_question_finish_time > QUESTION_FREQ:
+        if self._current_question is None and time.time() - self._last_question_finish_time > self._game_config.question_freq:
             self._add_question()
 
     def _add_question(self):
@@ -209,7 +209,8 @@ class Game2Cars(arcade.Window):
 
 
 def main():
-    game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, NUM_OF_CARS, SPAWN_RATE)
+    config = GameConfig(NUM_OF_CARS, SPAWN_RATE, OBSTACLE_SPEED, QUESTION_FREQ, QUESTION_DURATION)
+    game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, config)
     game.setup()
     arcade.run()
     pathlib.Path("data").mkdir(exist_ok=True)
