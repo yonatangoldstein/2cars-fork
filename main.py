@@ -18,7 +18,7 @@ MAX_DISTANCE = 100
 DISTANCE_TO_CAR = 84
 DISTANCE_PAST_CAR = 97
 OBSTACLE_INITIAL_DISTANCE = 5
-OBSTACLE_SPEED = 0.5
+OBSTACLE_SPEED = 35
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
 QUESTION_FREQ = 7
 QUESTION_DURATION = 4
@@ -114,7 +114,7 @@ class Game2Cars(arcade.Window):
         """ All the logic to move, and the game logic goes here. """
         if not self._is_started:
             return
-        self._move_obstacles()
+        self._move_obstacles(delta_time)
         self._obstacle_car_interactions()
         self._remove_finished_obstacles()
         self._spawn_new_obstacles()
@@ -142,10 +142,10 @@ class Game2Cars(arcade.Window):
     def _handle_miss(self):
         self._misses.append(time.time())
 
-    def _move_obstacles(self):
+    def _move_obstacles(self, delta_time):
         for i in range(self._game_config.num_of_cars):
             for obstacle in self._obstacles[i]:
-                obstacle.distance += self._game_config.obstacle_speed
+                obstacle.distance += delta_time * self._game_config.obstacle_speed
 
     def _spawn_new_obstacles(self):
         for i in range(self._game_config.num_of_cars):
