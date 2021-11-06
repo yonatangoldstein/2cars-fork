@@ -13,10 +13,12 @@ from questions import TrueFalseMathQuestion
 NUM_OF_CARS = 2
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 750
+CAR_TO_ROAD_LEN_PROPORTION = 0.07
 SPAWN_RATE = 1
 MAX_DISTANCE = 100
-DISTANCE_TO_CAR = 84
-DISTANCE_PAST_CAR = 97
+# The car center_y is exactly one car length away from the bottom of the screen TODO: make this less hard-coded
+DISTANCE_TO_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION * 1.5
+DISTANCE_PAST_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION / 2
 OBSTACLE_INITIAL_DISTANCE = 5
 OBSTACLE_SPEED = 35
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
@@ -99,8 +101,8 @@ class Game2Cars(arcade.Window):
                                      arcade.color.WHITE_SMOKE)
 
     def _draw_car(self, road_center_x, car):
-        car_width = self._road_width / 3.5
-        car_height = self.height / 10
+        car_height = self.height * CAR_TO_ROAD_LEN_PROPORTION
+        car_width = car_height / 1.5
         car_center_x = road_center_x + ((self._road_width / 4) * (1 if car.lane == CarLanes.RIGHT else -1))
         arcade.draw_rectangle_filled(car_center_x, car_height, car_width, car_height, car.color)
 
@@ -108,7 +110,7 @@ class Game2Cars(arcade.Window):
         for obstacle in obstacles:
             center_x = road_center_x + ((self._road_width / 4) * (1 if obstacle.lane == CarLanes.RIGHT else -1))
             center_y = self.height * ((MAX_DISTANCE - obstacle.distance) / MAX_DISTANCE)
-            arcade.draw_circle_filled(center_x, center_y, self._road_width / 7, obstacle.color)
+            arcade.draw_circle_filled(center_x, center_y, self._road_width * CAR_TO_ROAD_LEN_PROPORTION * 1.2, obstacle.color)
 
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
