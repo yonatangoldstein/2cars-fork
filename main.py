@@ -181,9 +181,9 @@ class Game2Cars(arcade.Window):
             self._start_game()
         if self._current_question is not None:
             answer = None
-            if symbol == arcade.key.V:
+            if symbol == arcade.key.RALT:
                 answer = True
-            elif symbol == arcade.key.F:
+            elif symbol == arcade.key.LALT:
                 answer = False
             if answer is not None:
                 self._handle_user_question_response(answer)
