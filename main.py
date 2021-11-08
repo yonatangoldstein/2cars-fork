@@ -47,9 +47,6 @@ class Game2Cars(arcade.Window):
         self._crashes = []
         arcade.set_background_color(arcade.color.AMAZON)
 
-    def setup(self):
-        pass
-
     def on_draw(self):
         """ Render the screen. """
         arcade.start_render()
