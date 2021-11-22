@@ -17,7 +17,7 @@ CAR_TO_ROAD_LEN_PROPORTION = 0.07
 EASY_SPAWN_RATE = 1
 MEDIUM_SPAWN_RATE = 0.7
 HARD_SPAWN_RATE = 0.5
-ROUND_DURATION = 60
+ROUND_DURATION = 120
 
 MAX_DISTANCE = 100
 # The car center_y is exactly one car length away from the bottom of the screen TODO: make this less hard-coded
@@ -172,12 +172,13 @@ class Game2Cars(arcade.Window):
         return json.dumps({"start_times": self._round_start_times,
                            "crashes": self._crashes,
                            "misses": self._misses,
-                           "end_times": self._round_end_times})
+                           "end_times": self._round_end_times,
+                           "spawn_rate": self._round_config.spawn_rate,
+                           "obstacle_speed": self._round_config.obstacle_speed})
 
 
 def main():
-    round_configs = [RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION),
-                     RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)]
+    round_configs = [RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)] * 10
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs)
     arcade.run()
     pathlib.Path("data").mkdir(exist_ok=True)
