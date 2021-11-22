@@ -26,6 +26,7 @@ DISTANCE_PAST_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION / 2
 OBSTACLE_INITIAL_DISTANCE = 5
 OBSTACLE_SPEED = 40
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
+COUNTDOWN_DURATION = 5
 
 
 class Game2Cars(arcade.Window):
@@ -38,8 +39,10 @@ class Game2Cars(arcade.Window):
         self._road_width = 0
         self._lane_line_width = 0
         self._is_started = False
+        self._is_spawn_started = False
         self._start_time = None
         self._round_start_times = []
+        self._spawn_start_times = []
         self._round_end_times = []
         self._last_spawn_times = []
         self._obstacles = []
@@ -60,7 +63,15 @@ class Game2Cars(arcade.Window):
             self._draw_car(road_center_x, self._cars[i])
             self._draw_obstacles(road_center_x, self._obstacles[i])
 
+        if not self._is_spawn_started:
+            self._draw_countdown()
+
         self._draw_messages()
+
+    def _draw_countdown(self):
+        count = COUNTDOWN_DURATION - int(time.time() - self._start_time)
+        arcade.draw_text("Get ready", self.width * 0.37, self.height * 2 / 3, arcade.color.WHITE_SMOKE, 34, bold=True)
+        arcade.draw_text(str(count), self.width * 0.48, self.height * 1.8 / 3, arcade.color.WHITE_SMOKE, 34, bold=True)
 
     def _draw_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
@@ -105,10 +116,17 @@ class Game2Cars(arcade.Window):
         if time.time() - self._start_time > self._round_config.duration:
             self._end_round()
             return
+        if time.time() - self._start_time > COUNTDOWN_DURATION:
+            self._start_spawn()
         self._move_obstacles(delta_time)
         self._obstacle_car_interactions()
         self._remove_finished_obstacles()
-        self._spawn_new_obstacles()
+        if self._is_spawn_started:
+            self._spawn_new_obstacles()
+
+    def _start_spawn(self):
+        self._spawn_start_times.append(time.time())
+        self._is_spawn_started = True
 
     def _obstacle_car_interactions(self):
         for i in range(self._round_config.num_of_cars):
@@ -155,6 +173,7 @@ class Game2Cars(arcade.Window):
     def _end_round(self):
         self._round_end_times.append(time.time())
         self._is_started = False
+        self._is_spawn_started = False
         self._round_index += 1
 
     def _start_round(self):
@@ -170,6 +189,7 @@ class Game2Cars(arcade.Window):
 
     def export_game_data(self):
         return json.dumps({"start_times": self._round_start_times,
+                           "spawn_start_times": self._spawn_start_times,
                            "crashes": self._crashes,
                            "misses": self._misses,
                            "end_times": self._round_end_times})
