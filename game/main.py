@@ -180,9 +180,9 @@ def main():
                      RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)]
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs)
     arcade.run()
-    pathlib.Path("../data").mkdir(exist_ok=True)
+    pathlib.Path("data").mkdir(exist_ok=True)
     data_filename = "2cars_data_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".json"
-    open(str(pathlib.Path("../data", data_filename)), "w").write(game.export_game_data())
+    open(str(pathlib.Path("data", data_filename)), "w").write(game.export_game_data())
 
 
 if __name__ == "__main__":
