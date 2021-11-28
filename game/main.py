@@ -8,6 +8,7 @@ from car import CarLanes
 from car_config import get_car
 from round_config import RoundConfig
 from obstacles import Bomb, Star
+from game.lsl_triggers import LslTriggers
 
 NUM_OF_CARS = 2
 SCREEN_WIDTH = 800
@@ -29,7 +30,7 @@ FAILURE_MESSAGE_DISPLAY_TIME = 0.4
 
 
 class Game2Cars(arcade.Window):
-    def __init__(self, width, height, round_configs):
+    def __init__(self, width, height, round_configs, lsl_trigger=None):
         super().__init__(width, height)
         self._round_index = 0
         self._round_configs = round_configs
@@ -45,6 +46,7 @@ class Game2Cars(arcade.Window):
         self._obstacles = []
         self._misses = []
         self._crashes = []
+        self._lsl_trigger = lsl_trigger
         arcade.set_background_color(arcade.color.AMAZON)
 
     def on_draw(self):
@@ -128,9 +130,13 @@ class Game2Cars(arcade.Window):
 
     def _handle_crash(self):
         self._crashes.append(time.time())
+        if self._lsl_trigger:
+            self._lsl_trigger.mistake()
 
     def _handle_miss(self):
         self._misses.append(time.time())
+        if self._lsl_trigger:
+            self._lsl_trigger.mistake()
 
     def _move_obstacles(self, delta_time):
         for i in range(self._round_config.num_of_cars):
@@ -156,6 +162,8 @@ class Game2Cars(arcade.Window):
         self._round_end_times.append(time.time())
         self._is_started = False
         self._round_index += 1
+        if self._lsl_trigger:
+            self._lsl_trigger.end_round()
 
     def _start_round(self):
         self._round_config = self._round_configs[self._round_index]
@@ -167,6 +175,8 @@ class Game2Cars(arcade.Window):
         self._start_time = time.time()
         self._round_start_times.append(time.time())
         self._is_started = True
+        if self._lsl_trigger:
+            self._lsl_trigger.begin_round()
 
     def export_game_data(self):
         return json.dumps({"start_times": self._round_start_times,
@@ -178,7 +188,7 @@ class Game2Cars(arcade.Window):
 def main():
     round_configs = [RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION),
                      RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)]
-    game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs)
+    game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs, LslTriggers())
     arcade.run()
     pathlib.Path("data").mkdir(exist_ok=True)
     data_filename = "2cars_data_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".json"
