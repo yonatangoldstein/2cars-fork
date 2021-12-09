@@ -128,6 +128,7 @@ class Game2Cars(arcade.Window):
 
     def _start_spawn(self):
         self._spawn_start_times.append(time.time())
+        self._lsl_trigger.mark_spawn_start()
         self._is_spawn_started = True
 
     def _obstacle_car_interactions(self):
@@ -149,12 +150,12 @@ class Game2Cars(arcade.Window):
     def _handle_crash(self):
         self._crashes.append(time.time())
         if self._lsl_trigger:
-            self._lsl_trigger.mistake()
+            self._lsl_trigger.mark_mistake()
 
     def _handle_miss(self):
         self._misses.append(time.time())
         if self._lsl_trigger:
-            self._lsl_trigger.mistake()
+            self._lsl_trigger.mark_mistake()
 
     def _move_obstacles(self, delta_time):
         for i in range(self._round_config.num_of_cars):
@@ -182,7 +183,7 @@ class Game2Cars(arcade.Window):
         self._is_spawn_started = False
         self._round_index += 1
         if self._lsl_trigger:
-            self._lsl_trigger.end_round()
+            self._lsl_trigger.mark_round_end()
 
     def _start_round(self):
         self._round_config = self._round_configs[self._round_index]
@@ -195,7 +196,7 @@ class Game2Cars(arcade.Window):
         self._round_start_times.append(time.time())
         self._is_started = True
         if self._lsl_trigger:
-            self._lsl_trigger.begin_round()
+            self._lsl_trigger.mark_round_start()
 
     def export_game_data(self):
         return json.dumps({"start_times": self._round_start_times,

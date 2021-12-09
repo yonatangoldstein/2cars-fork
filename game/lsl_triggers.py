@@ -2,6 +2,7 @@ from pylsl import StreamInfo, StreamOutlet
 
 
 ROUND_BEGIN_TRIGGER = 100
+SPAWN_BEGIN_TRIGGER = 111
 ROUND_END_TRIGGER = 101
 
 MISTAKE_TRIGGER = 404
@@ -14,11 +15,14 @@ class LslTriggers(object):
     def __init__(self):
         self._outlet = StreamOutlet(StreamInfo("GameMarkers", "Markers"))
 
-    def begin_round(self):
+    def mark_round_start(self):
         self._outlet.push_sample([ROUND_BEGIN_TRIGGER])
 
-    def end_round(self):
+    def mark_spawn_start(self):
+        self._outlet.push_sample([SPAWN_BEGIN_TRIGGER])
+
+    def mark_round_end(self):
         self._outlet.push_sample([ROUND_END_TRIGGER])
 
-    def mistake(self):
+    def mark_mistake(self):
         self._outlet.push_sample([MISTAKE_TRIGGER])
