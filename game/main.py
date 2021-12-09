@@ -118,7 +118,7 @@ class Game2Cars(arcade.Window):
         if time.time() - self._start_time > self._round_config.duration:
             self._end_round()
             return
-        if time.time() - self._start_time > COUNTDOWN_DURATION:
+        if not self._is_spawn_started and time.time() - self._start_time > COUNTDOWN_DURATION:
             self._start_spawn()
         self._move_obstacles(delta_time)
         self._obstacle_car_interactions()
