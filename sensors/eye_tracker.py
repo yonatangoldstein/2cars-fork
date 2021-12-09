@@ -14,12 +14,13 @@ PUPIL_DIAMETER_KEY = "pd"
 EYE_KEY = "eye"
 
 
-def stream_pupil_diameter(callback, timeout=1):
+def stream_pupil_diameter(callback, timeout=1, smooth_zeros=True):
     """
     Stream pupil diamater info from Tobii eye tracker to a callback function
 
     :param callback: a function that receives 2 arguments (left_diameter, right_diameter)
     :param timeout: maximum timeout to receive data
+    :param smooth_zeros: whether to ignore zero diameter (caused by blinking usually)
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -36,11 +37,11 @@ def stream_pupil_diameter(callback, timeout=1):
 
         live_data = json.loads(sock.recv(RECV_BUFFER_SIZE))
         if PUPIL_DIAMETER_KEY in live_data:
-            if live_data[EYE_KEY] == "right":
-                right_diameter = live_data[PUPIL_DIAMETER_KEY]
-            else:
-                left_diameter = live_data[PUPIL_DIAMETER_KEY]
-
+            if live_data[PUPIL_DIAMETER_KEY] != 0 or not smooth_zeros:
+                if live_data[EYE_KEY] == "right":
+                    right_diameter = live_data[PUPIL_DIAMETER_KEY]
+                else:
+                    left_diameter = live_data[PUPIL_DIAMETER_KEY]
             callback(left_diameter, right_diameter)
 
 
