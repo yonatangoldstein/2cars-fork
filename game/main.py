@@ -112,10 +112,9 @@ class Game2Cars(arcade.Window):
             arcade.draw_circle_filled(center_x, center_y, self._road_width * CAR_TO_ROAD_LEN_PROPORTION * 1.2, obstacle.color)
 
     def update(self, delta_time):
-        """ All the logic to move, and the game logic goes here. """
         if not self._is_started:
             return
-        if time.time() - self._start_time > self._round_config.duration:
+        if time.time() - (self._start_time + COUNTDOWN_DURATION) > self._round_config.duration:
             self._end_round()
             return
         if not self._is_spawn_started and time.time() - self._start_time > COUNTDOWN_DURATION:
