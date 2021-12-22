@@ -83,7 +83,7 @@ class Game2Cars(arcade.Window):
         self._draw_messages()
 
     def _draw_countdown(self):
-        count = COUNTDOWN_DURATION - int(time.time() - self._start_time)
+        count = self._round_config.countdown_duration - int(time.time() - self._start_time)
         arcade.draw_text("Get ready", self.width * 0.37, self.height * 2 / 3, self._countdown_color, 34, bold=True)
         arcade.draw_text(str(count), self.width * 0.48, self.height * 1.8 / 3, self._countdown_color, 34, bold=True)
 
@@ -122,10 +122,10 @@ class Game2Cars(arcade.Window):
     def update(self, delta_time):
         if not self._is_started:
             return
-        if time.time() - (self._start_time + COUNTDOWN_DURATION) > self._round_config.duration:
+        if time.time() - (self._start_time + self._round_config.countdown_duration) > self._round_config.duration:
             self._end_round()
             return
-        if not self._is_spawn_started and time.time() - self._start_time > COUNTDOWN_DURATION:
+        if not self._is_spawn_started and time.time() - self._start_time > self._round_config.countdown_duration:
             self._start_spawn()
         self._move_obstacles(delta_time)
         self._obstacle_car_interactions()
@@ -237,21 +237,29 @@ class Game2Cars(arcade.Window):
 
 
 def main():
-    round_configs = [RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, EASY_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, EASY_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION),
-                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION)]
+    round_configs = [RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, EASY_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, EASY_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, HARD_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, TRAINING_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION),
+                     RoundConfig(NUM_OF_CARS, IMPROVEMENT_BLOCK_SPAWN_RATE, OBSTACLE_SPEED, IMPROVEMENT_BLOCK_DURATION, COUNTDOWN_DURATION)]
+
+    # add 2 empty rounds for calibration
+    calibration_time = 30
+    calibration_round_configs = [RoundConfig(NUM_OF_CARS, 0, 0, 0, calibration_time),
+                                 RoundConfig(NUM_OF_CARS, 0, 0, 0, calibration_time)]
+
+    round_configs = calibration_round_configs + round_configs
+
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs, LslTriggers())
     arcade.run()
     pathlib.Path("data").mkdir(exist_ok=True)
