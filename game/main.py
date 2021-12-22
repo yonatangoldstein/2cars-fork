@@ -6,6 +6,7 @@ import arcade
 import pathlib
 from car import CarLanes
 from car_config import get_car
+from game.colors import luminance, adjust_color_to_match_luminance
 from round_config import RoundConfig
 from obstacles import Bomb, Star
 from game.lsl_triggers import LslTriggers
@@ -30,6 +31,9 @@ OBSTACLE_INITIAL_DISTANCE = 5
 OBSTACLE_SPEED = 40
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
 COUNTDOWN_DURATION = 5
+BACKGROUND_COLOR = arcade.color.AMAZON
+ROAD_COLOR = arcade.color.ASH_GREY
+LANE_LINE_COLOR = arcade.color.WHITE_SMOKE
 
 
 class Game2Cars(arcade.Window):
@@ -41,6 +45,12 @@ class Game2Cars(arcade.Window):
         self._cars = []
         self._road_width = 0
         self._lane_line_width = 0
+        self._car_width = 0
+        self._car_height = 0
+        self._message_color = None
+        self._countdown_color = None
+        self._bomb_color = None
+        self._star_color = None
         self._is_started = False
         self._is_spawn_started = False
         self._start_time = None
@@ -52,7 +62,7 @@ class Game2Cars(arcade.Window):
         self._misses = []
         self._crashes = []
         self._lsl_trigger = lsl_trigger
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(BACKGROUND_COLOR)
 
     def on_draw(self):
         """ Render the screen. """
@@ -74,16 +84,16 @@ class Game2Cars(arcade.Window):
 
     def _draw_countdown(self):
         count = COUNTDOWN_DURATION - int(time.time() - self._start_time)
-        arcade.draw_text("Get ready", self.width * 0.37, self.height * 2 / 3, arcade.color.WHITE_SMOKE, 34, bold=True)
-        arcade.draw_text(str(count), self.width * 0.48, self.height * 1.8 / 3, arcade.color.WHITE_SMOKE, 34, bold=True)
+        arcade.draw_text("Get ready", self.width * 0.37, self.height * 2 / 3, self._countdown_color, 34, bold=True)
+        arcade.draw_text(str(count), self.width * 0.48, self.height * 1.8 / 3, self._countdown_color, 34, bold=True)
 
     def _draw_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
         if time.time() - last_crash_time < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Crashed!", self.width / 3, self.height / 2, arcade.color.RED, 32, bold=True)
+            arcade.draw_text("Crashed!", self.width / 3, self.height / 2, self._message_color, 32, bold=True)
         last_miss_time = self._misses[-1] if self._misses else 0
         if time.time() - last_miss_time < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
+            arcade.draw_text("Missed star!", self.width / 3, self.height / 2, self._message_color, 32, bold=True)
 
     def _draw_intro(self):
         if self._round_index == 0:
@@ -96,16 +106,12 @@ class Game2Cars(arcade.Window):
                          multiline=True, width=self.width)
 
     def _draw_road(self, center_x):
-        arcade.draw_rectangle_filled(center_x, self.height / 2, self._road_width, self.height,
-                                     arcade.color.BLACK_LEATHER_JACKET)
-        arcade.draw_rectangle_filled(center_x, self.height / 2, self._lane_line_width, self.height,
-                                     arcade.color.WHITE_SMOKE)
+        arcade.draw_rectangle_filled(center_x, self.height / 2, self._road_width, self.height, ROAD_COLOR)
+        arcade.draw_rectangle_filled(center_x, self.height / 2, self._lane_line_width, self.height, LANE_LINE_COLOR)
 
     def _draw_car(self, road_center_x, car):
-        car_height = self.height * CAR_TO_ROAD_LEN_PROPORTION
-        car_width = car_height / 1.5
         car_center_x = road_center_x + ((self._road_width / 4) * (1 if car.lane == CarLanes.RIGHT else -1))
-        arcade.draw_rectangle_filled(car_center_x, car_height, car_width, car_height, car.color)
+        arcade.draw_rectangle_filled(car_center_x, self._car_height, self._car_width, self._car_height, car.color)
 
     def _draw_obstacles(self, road_center_x, obstacles):
         for obstacle in obstacles:
@@ -168,7 +174,8 @@ class Game2Cars(arcade.Window):
             if time.time() - self._last_spawn_times[i] > (self._round_config.spawn_rate + (random.random() / 5)):
                 obstacle_type = Bomb if random.randint(0, 1) == 0 else Star
                 lane = CarLanes.LEFT if random.randint(0, 1) == 0 else CarLanes.RIGHT
-                self._obstacles[i].append(obstacle_type(lane, OBSTACLE_INITIAL_DISTANCE))
+                color = self._star_color if obstacle_type == Star else self._bomb_color
+                self._obstacles[i].append(obstacle_type(lane, OBSTACLE_INITIAL_DISTANCE, color))
                 self._last_spawn_times[i] = time.time()
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -191,6 +198,8 @@ class Game2Cars(arcade.Window):
         self._cars = [get_car(i) for i in range(self._round_config.num_of_cars)]
         self._road_width = self.width / self._round_config.num_of_cars / 2
         self._lane_line_width = self._road_width / 20
+        self._car_height = self.height * CAR_TO_ROAD_LEN_PROPORTION
+        self._car_width = self._car_height / 1.5
         self._last_spawn_times = [time.time() for _ in range(self._round_config.num_of_cars)]
         self._obstacles = [[] for _ in range(self._round_config.num_of_cars)]
         self._start_time = time.time()
@@ -198,6 +207,26 @@ class Game2Cars(arcade.Window):
         self._is_started = True
         if self._lsl_trigger:
             self._lsl_trigger.mark_round_start()
+        self._stabilize_luminance()
+
+    def _stabilize_luminance(self):
+        avg_luminance = self._calc_avg_luminance()
+        self._message_color = adjust_color_to_match_luminance(list(arcade.color.CHINESE_RED), avg_luminance)
+        self._countdown_color = adjust_color_to_match_luminance(list(arcade.color.DEEP_SPACE_SPARKLE), avg_luminance)
+        self._bomb_color = adjust_color_to_match_luminance(list(Bomb.base_color()), avg_luminance * 0.5)
+        self._star_color = adjust_color_to_match_luminance(list(Star.base_color()), avg_luminance * 1.5)
+
+    def _calc_avg_luminance(self):
+        total_area = self.width * self.height
+        car_area = self._car_width * self._car_height
+        lane_line_area = self._lane_line_width * self.height
+        road_area = self._road_width * self.height - lane_line_area - car_area
+        background_area = total_area - (road_area + lane_line_area + car_area) * self._round_config.num_of_cars
+        avg_luminance = ((background_area / total_area) * luminance(BACKGROUND_COLOR) +
+                         (road_area * self._round_config.num_of_cars / total_area) * luminance(ROAD_COLOR) +
+                         (lane_line_area * self._round_config.num_of_cars / total_area) * luminance(LANE_LINE_COLOR) +
+                         sum((car_area / total_area) * luminance(car.color) for car in self._cars))
+        return avg_luminance
 
     def export_game_data(self):
         return json.dumps({"start_times": self._round_start_times,

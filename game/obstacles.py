@@ -2,9 +2,10 @@ import arcade
 
 
 class Obstacle(object):
-    def __init__(self, lane, distance):
+    def __init__(self, lane, distance, color):
         self._lane = lane
         self._distance = distance
+        self._color = color
 
     @property
     def lane(self):
@@ -20,16 +21,20 @@ class Obstacle(object):
 
     @property
     def color(self):
+        return self._color
+
+    @classmethod
+    def base_color(cls):
         raise NotImplementedError()
 
 
 class Bomb(Obstacle):
-    @property
-    def color(self):
+    @classmethod
+    def base_color(cls):
         return arcade.color.BLACK
 
 
 class Star(Obstacle):
-    @property
-    def color(self):
+    @classmethod
+    def base_color(cls):
         return arcade.color.GOLD
