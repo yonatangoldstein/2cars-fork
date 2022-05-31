@@ -18,16 +18,16 @@ SCREEN_HEIGHT = 700
 CAR_TO_ROAD_LEN_PROPORTION = 0.07
 
 EASY_SPAWN_RATE = 1.5
-MEDIUM_SPAWN_RATE = 5
+MEDIUM_SPAWN_RATE = 0.7
 HARD_SPAWN_RATE = 0.4
-ROUND_DURATION = 3
+ROUND_DURATION = 120
 
 MAX_DISTANCE = 100
 # The car center_y is exactly one car length away from the bottom of the screen TODO: make this less hard-coded
 DISTANCE_TO_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION * 1.5
 DISTANCE_PAST_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION / 2
 OBSTACLE_INITIAL_DISTANCE = 5
-OBSTACLE_SPEED = 10
+OBSTACLE_SPEED = 45
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
 
 def mat_to_numpy(array_path='', mat_array_name=''):
@@ -61,6 +61,8 @@ class Game2Cars(arcade.Window):
         self._obstacles = []
         self._misses = []
         self._crashes = []
+        self._score = 0
+        self._gain = []
         arcade.set_background_color(arcade.color.AMAZON)
 
     def on_draw(self):
@@ -81,11 +83,14 @@ class Game2Cars(arcade.Window):
     def _draw_messages(self):
         last_crash_time = self._crashes[-1] if self._crashes else 0
         if time.time() - last_crash_time < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Crashed!", self.width / 3, self.height / 2, arcade.color.RED, 32, bold=True)
-        last_miss_time = self._misses[-1] if self._misses else 0
-        if time.time() - last_miss_time < FAILURE_MESSAGE_DISPLAY_TIME:
-            arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
-
+            arcade.draw_text("-50", self.width / 3, self.height / 2, arcade.color.RED, 32, bold=True)
+        #last_miss_time = self._misses[-1] if self._misses else 0
+        #if time.time() - last_miss_time < FAILURE_MESSAGE_DISPLAY_TIME:
+        #    arcade.draw_text("Missed star!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
+        last_gain_time = self._gain[-1] if self._gain else 0
+        if time.time() - last_gain_time < FAILURE_MESSAGE_DISPLAY_TIME:
+            arcade.draw_text("+100!", self.width / 3, self.height / 2, arcade.color.YELLOW_ORANGE, 32, bold=True)
+    
     def _draw_intro(self):
         if self._round_index == 0:
             text = "Press space to start"
@@ -124,7 +129,6 @@ class Game2Cars(arcade.Window):
 
     def move_car(self):
         press = mat_to_numpy()
-        time.sleep(2)
         if press[0][0] == 1: 
             self._cars[0].lane = CarLanes.LEFT
         else:
@@ -149,6 +153,9 @@ class Game2Cars(arcade.Window):
                 if DISTANCE_TO_CAR <= obstacle.distance < DISTANCE_PAST_CAR and obstacle.lane == self._cars[i].lane:
                     if isinstance(obstacle, Bomb):
                         self._handle_crash()
+                    else:
+                        self._gain.append(time.time()) 
+                        self._score += 100
                     self._obstacles[i].remove(obstacle)
 
     def _remove_finished_obstacles(self):
@@ -161,6 +168,7 @@ class Game2Cars(arcade.Window):
 
     def _handle_crash(self):
         self._crashes.append(time.time())
+        self._score = self._score - 50
 
     def _handle_miss(self):
         self._misses.append(time.time())
