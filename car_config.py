@@ -1,13 +1,27 @@
 import arcade
+import numpy as np
+import scipy
 from car import CarLanes, Car
+
+def mat_to_numpy(array_path, mat_array_name):
+
+    # load mat array as numpy array
+    np_ar = scipy.io.loadmat(array_path + mat_array_name)
+    ar = list(np_ar.values())[-1]
+    # save numpy array
+    np_array_name = (mat_array_name.split('.')[0] + '.npy')
+    drop_path = array_path + np_array_name
+    np.save(drop_path, ar)
+    return ar
 
 COLOR_KEY = "color"
 KEYMAP_KEY = "keymap"
+vote_path = r'C:\Users\dell\Documents\bci4als\car_game\2cars-fork\\'
 
 
 CARS_CONFIG = {
     0: {
-        COLOR_KEY: arcade.color.TEAL,
+        COLOR_KEY: arcade.color.DARK_PINK,
         KEYMAP_KEY: {arcade.key.Q: CarLanes.LEFT,
                      arcade.key.E: CarLanes.RIGHT}
     },

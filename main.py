@@ -8,24 +8,40 @@ from car import CarLanes
 from car_config import get_car
 from round_config import RoundConfig
 from obstacles import Bomb, Star
+import numpy as np
+from scipy import io
 
-NUM_OF_CARS = 2
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 750
+NUM_OF_CARS = 1
+NUM_OF_ROUNDS = 3
+SCREEN_WIDTH = 1600
+SCREEN_HEIGHT = 700
 CAR_TO_ROAD_LEN_PROPORTION = 0.07
 
-EASY_SPAWN_RATE = 1.4
-MEDIUM_SPAWN_RATE = 0.7
+EASY_SPAWN_RATE = 1.5
+MEDIUM_SPAWN_RATE = 5
 HARD_SPAWN_RATE = 0.4
-ROUND_DURATION = 120
+ROUND_DURATION = 3
 
 MAX_DISTANCE = 100
 # The car center_y is exactly one car length away from the bottom of the screen TODO: make this less hard-coded
 DISTANCE_TO_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION * 1.5
 DISTANCE_PAST_CAR = MAX_DISTANCE - MAX_DISTANCE * CAR_TO_ROAD_LEN_PROPORTION / 2
 OBSTACLE_INITIAL_DISTANCE = 5
-OBSTACLE_SPEED = 45
+OBSTACLE_SPEED = 10
 FAILURE_MESSAGE_DISPLAY_TIME = 0.4
+
+def mat_to_numpy(array_path='', mat_array_name=''):
+       
+        # load mat array as numpy array
+        array_path = r'C:\Users\dell\Documents\bci4als\car_game\2cars-fork\\'
+        mat_array_name = 'x.mat'
+        np_ar = io.loadmat(array_path + mat_array_name)
+        ar = list(np_ar.values())[-1]
+        # save numpy array
+        np_array_name = (mat_array_name.split('.')[0] + '.npy')
+        drop_path = array_path + np_array_name
+        np.save(drop_path, ar)
+        return ar
 
 
 class Game2Cars(arcade.Window):
@@ -87,6 +103,14 @@ class Game2Cars(arcade.Window):
                                      arcade.color.WHITE_SMOKE)
 
     def _draw_car(self, road_center_x, car):
+        #  press = [2, 1, 2, 1, 2, 2, 1]
+        # press = mat_to_numpy()
+        
+        # if press[0][0] == 1: 
+        #     self._cars[0].lane = CarLanes.LEFT
+        # else:
+        #     self._cars[0].lane = CarLanes.RIGHT
+        
         car_height = self.height * CAR_TO_ROAD_LEN_PROPORTION
         car_width = car_height / 1.5
         car_center_x = road_center_x + ((self._road_width / 4) * (1 if car.lane == CarLanes.RIGHT else -1))
@@ -98,6 +122,14 @@ class Game2Cars(arcade.Window):
             center_y = self.height * ((MAX_DISTANCE - obstacle.distance) / MAX_DISTANCE)
             arcade.draw_circle_filled(center_x, center_y, self._road_width * CAR_TO_ROAD_LEN_PROPORTION * 1.2, obstacle.color)
 
+    def move_car(self):
+        press = mat_to_numpy()
+        time.sleep(2)
+        if press[0][0] == 1: 
+            self._cars[0].lane = CarLanes.LEFT
+        else:
+            self._cars[0].lane = CarLanes.RIGHT
+        
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
         if not self._is_started:
@@ -109,6 +141,7 @@ class Game2Cars(arcade.Window):
         self._obstacle_car_interactions()
         self._remove_finished_obstacles()
         self._spawn_new_obstacles()
+        self.move_car()
 
     def _obstacle_car_interactions(self):
         for i in range(self._round_config.num_of_cars):
@@ -151,7 +184,7 @@ class Game2Cars(arcade.Window):
                 car.lane = car.keymap[symbol]
         if symbol == arcade.key.SPACE and not self._is_started and self._round_index < len(self._round_configs):
             self._start_round()
-
+            
     def _end_round(self):
         self._round_end_times.append(time.time())
         self._is_started = False
@@ -177,8 +210,9 @@ class Game2Cars(arcade.Window):
                            "obstacle_speed": self._round_config.obstacle_speed})
 
 
-def main():
-    round_configs = [RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)] * 10
+
+def main():  
+    round_configs = [RoundConfig(NUM_OF_CARS, MEDIUM_SPAWN_RATE, OBSTACLE_SPEED, ROUND_DURATION)] * NUM_OF_ROUNDS
     game = Game2Cars(SCREEN_WIDTH, SCREEN_HEIGHT, round_configs)
     arcade.run()
     pathlib.Path("data").mkdir(exist_ok=True)
